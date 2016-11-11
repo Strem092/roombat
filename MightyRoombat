@@ -1,0 +1,162 @@
+#include <Servo.h>
+
+  
+  
+  //Pins that connect to the H bridge with the motors
+  int motor1ReversePin = 6;
+  int motor2ReversePin = 3;
+  int motor1ForwardPin = 7;
+  int motor2ForwardPin = 2 ;
+  int motor1Enable = 9;
+  int motor2Enable = 8;
+  
+  //Pin for the IR sensor
+  int IRsensorPin = 1;
+  
+  //Pin for the Ultrasonic Sensor
+  int USsensorTrigPin = 10;
+  int USsensorEchoPin = 11;
+
+  //Pin to control the servo
+  int servoPin = 12;
+
+  Servo IRservo;
+  
+void setup() {
+  
+  Serial.begin(9600);
+   
+  //Set the pin for the servo
+  IRservo.attach(servoPin);
+  
+
+  //Set the pins for the Ultrasonic Sensor
+  pinMode(USsensorTrigPin, OUTPUT);
+  pinMode(USsensorEchoPin, INPUT);
+
+  //Set the pins for the motors
+  pinMode(motor1ForwardPin, OUTPUT);
+  pinMode(motor2ForwardPin, OUTPUT);
+
+  //Sets the pins to reverse the direction of the motor (with the H bridge)
+  pinMode(motor1ReversePin, OUTPUT);
+  pinMode(motor2ReversePin, OUTPUT);
+
+  
+  
+}
+
+void loop() {
+  digitalWrite(motor1Enable, HIGH);
+  digitalWrite(motor2Enable, HIGH);r4
+  int IRdistance=0;
+  int USdistance=0;
+  
+  //int maxDistance = 0;
+
+  //Sets the servo to look straight ahead
+  IRservo.write(90);
+  
+  //Sets the pin for the IR sensor to an input to read it (IR sensor sends different voltages for different ranges: Analog pin)
+  pinMode(IRsensorPin, INPUT);
+
+  //Read the voltage sent back from the IR sensor and converts it to a distance
+  IRdistance = 6762/(analogRead(IRsensorPin)-9)-4;
+
+
+  
+  //Send a ping to the trigger pin of the ultrasonic sensor
+  digitalWrite(USsensorTrigPin, LOW);
+  delay(5);
+  digitalWrite(USsensorTrigPin, HIGH);
+  delay(10);
+  digitalWrite(USsensorTrigPin, LOW);
+
+  //Gets the duration of the ping and converts it to centimeters
+  USdistance = pulseIn(USsensorEchoPin, HIGH)/29/2;
+
+  
+  /*
+  //Checks if it goes over an edge
+  if(USdistance > 5) {
+    //Stop the wheels
+  }
+
+  //Set the speed for the motors
+  //************Fix the distance limit****************
+  if(IRdistance < 10){
+    
+    int distancesLeft[90];
+    int distancesRight[90];
+    
+    analogWrite(motor1ForwardPin, 0);
+    analogWrite(motor2ForwardPin, 0);
+    analogWrite(motor1ReversePin, 0);
+    analogWrite(motor2ReversePin, 0);
+
+    IRservo.write(0);
+
+    //We need 1.77 revoltutions of the motor to turn 90 degrees
+    analogWrite(motor1ForwardPin, 100);
+    analogWrite(motor2ReversePin, 100);
+    //Delay until it move 90 degrees *************************Fix the delay********************************
+    delay(100);
+
+    analogWrite(motor1ForwardPin, 0);
+    analogWrite(motor2ReversePin, 0);
+
+    for(int i = 0; i<= 90; i++){
+      //Makes an array of distances for the left/right
+      distancesLeft[i] = 6762/(analogRead(IRsensorPin)-9)-4;
+    }
+
+    //put the servo back at 0
+    IRservo.write(0);
+
+    
+    //We need 1.77*2 revoltutions of the motor to turn 180 degrees
+    analogWrite(motor1ReversePin, 100);
+    analogWrite(motor2ForwardPin, 100);
+    
+    //Delay until it move 180 degrees *************************Fix the delay********************************
+    delay(100);
+
+    analogWrite(motor1ForwardPin, 0);
+    analogWrite(motor2ReversePin, 0);
+
+    for(int i = 0; i<= 90; i++){
+      //Makes an array of distances for the left/right
+      distancesRight[i] = 6762/(analogRead(IRsensorPin)-9)-4;
+    }
+
+    //do stuff
+    
+  }
+  */
+  Serial.print("\n IR: ");
+  Serial.print(IRdistance);
+  Serial.print("\n Ultra: ");
+  Serial.print(USdistance);
+  
+  digitalWrite(motor1ReversePin, LOW);
+  digitalWrite(motor1ForwardPin, HIGH);
+
+  digitalWrite(motor2ReversePin, LOW);
+  digitalWrite(motor2ForwardPin, HIGH);
+  
+}
+
+
+
+//Conversion to inches function. Taken from the "ping" example
+
+/*long microsecondsToInches(long microseconds) {
+  return microseconds / 74 / 2;
+}
+
+//Conversion to centimeters function. Taken from the "ping" example
+
+long microSecondsToCentimeters(long microseconds) {
+  return microseconds / 29 / 2;
+}
+*/
