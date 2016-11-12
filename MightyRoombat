@@ -78,7 +78,21 @@ void loop() {
   
   //Checks if it goes over an edge
   if(USdistance > 5) {
+    
+    digitalWrite(motor1ForwardPin, LOW);
+    delay(10);
+    digitalWrite(motor2ForwardPin, LOW);
+    delay(10);
+    digitalWrite(motor1ReversePin, HIGH);
+    delay(10);
+    digitalWrite(motor2ReversePin, HIGH);
+    delay(3000);
 
+    digitalWrite(motor1ReversePin, LOW);
+    delay(10);
+    digitalWrite(motor2ReversePin, LOW);
+    delay(10);
+    
     while(USdistance > 5){
       USdistance = getUSdistance();
       turnLeftNinety();
