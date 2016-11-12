@@ -4,9 +4,9 @@
   
   //Pins that connect to the H bridge with the motors
   int motor1ForwardPin = 7;
-  int motor2ReversePin = 2;
+  int motor2ReversePin = 3;
   int motor1ReversePin = 6;
-  int motor2ForwardPin = 3 ;
+  int motor2ForwardPin = 2 ;
   int motor1Enable = 9;
   int motor2Enable = 8;
   
@@ -49,10 +49,11 @@ void setup() {
 void loop() {
   digitalWrite(motor1Enable, HIGH);
   digitalWrite(motor2Enable, HIGH);
-  float volts;
-  float IRdistance=0;
-  int USdistance=0;
   
+  float IRdistanceLeft;
+  float IRdistanceRight;
+  int USdistance=0;
+  float IRdistance;
   
 
   //Sets the servo to look straight ahead
@@ -64,14 +65,9 @@ void loop() {
   //Sets the pin for the IR sensor to an input to read it (IR sensor sends different voltages for different ranges: Analog pin)
   pinMode(IRsensorPin, INPUT);
 
-  //Read the voltage sent back from the IR sensor and converts it to a distance
-  //Using the graphs from the data sheets we find:
-  volts = analogRead(5)*0.0048828125; //5V/1024
   
-  IRdistance = 13*pow(volts, -1.1);
-  
-  
-  
+  IRdistance = getIRdistance();
+
   USdistance = getUSdistance();
 
   
@@ -79,19 +75,8 @@ void loop() {
   //Checks if it goes over an edge
   if(USdistance > 5) {
     
-    digitalWrite(motor1ForwardPin, LOW);
-    delay(10);
-    digitalWrite(motor2ForwardPin, LOW);
-    delay(10);
-    digitalWrite(motor1ReversePin, HIGH);
-    delay(10);
-    digitalWrite(motor2ReversePin, HIGH);
-    delay(3000);
-
-    digitalWrite(motor1ReversePin, LOW);
-    delay(10);
-    digitalWrite(motor2ReversePin, LOW);
-    delay(10);
+    stopWheelsFast();
+    
     
     while(USdistance > 5){
       USdistance = getUSdistance();
@@ -99,22 +84,18 @@ void loop() {
     }
     
     
-  } else if(IRdistance < 10){
+  } else if(IRdistance < 15){
+
+    stopWheelsFast();
     
     
-    int sumLeft = 0;
-    int sumRight = 0;
-    float maxDistanceLeft = 0;
-    float maxDistanceRight = 0;
     
-    digitalWrite(motor1ForwardPin, LOW);
-    digitalWrite(motor2ForwardPin, LOW);
-    digitalWrite(motor1ReversePin, LOW);
-    digitalWrite(motor2ReversePin, LOW);
 
     IRservo.write(15);
     delay(1000);
-    
+
+    IRdistanceLeft = getIRdistance();
+/*    
     for(int i = 0; i<= 45; i++){
       //Makes an array of distances for the left/right
       IRservo.write(i*4);
@@ -125,16 +106,6 @@ void loop() {
       sumLeft = sumLeft+IRdistance;
       
     }
-    
-    //put the servo back at 0
-    IRservo.write(0);
-    delay(1000);
-
-    
-    turnRightNinety();
-    delay(100);
-    turnRightNinety();
-
     for(int i = 0; i<= 90; i++){
       //Makes an array of distances for the left/right
       IRservo.write(i*4);
@@ -145,27 +116,25 @@ void loop() {
       sumRight = sumRight+IRdistance;
       
     }
-
-   IRservo.write(15);
+*/
+   IRservo.write(180);
    delay(1000);
+   IRdistanceRight = getIRdistance();
     
-   if(sumLeft > sumRight){
+   if(IRdistanceLeft > IRdistanceRight){
     turnLeftNinety();
    } else {
     turnRightNinety();
    }
-    
+
+   goForward();
+
+   
     
   } 
+
+  goForward();
   
-  digitalWrite(motor1ForwardPin, HIGH);
-  delay(10);
-  digitalWrite(motor2ForwardPin, HIGH);
-  delay(10);
-  digitalWrite(motor1ReversePin, LOW);
-  delay(10);
-  digitalWrite(motor2ReversePin, LOW);
-  delay(1000);
     
   Serial.print("\n IR: ");
   Serial.print(IRdistance);
@@ -180,7 +149,60 @@ void loop() {
   
 }
 
+void goForward(){
+  digitalWrite(motor1ForwardPin, HIGH);
+  delay(10);
+  digitalWrite(motor2ForwardPin, HIGH);
+  delay(10);
+  digitalWrite(motor1ReversePin, LOW);
+  delay(10);
+  digitalWrite(motor2ReversePin, LOW); 
 
+  
+  
+  
+ 
+
+  
+  
+}
+
+void stopWheels(){
+
+  digitalWrite(motor1ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor2ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor1ReversePin, LOW);
+  delay(10);
+  digitalWrite(motor2ReversePin, LOW);
+  delay(1000);
+
+  
+}
+void stopWheelsFast(){
+
+  digitalWrite(motor1ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor2ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor1ReversePin, HIGH);
+  delay(10);
+  digitalWrite(motor2ReversePin, HIGH);
+  delay(500);
+
+
+  
+  digitalWrite(motor1ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor2ForwardPin, LOW);
+  delay(10);
+  digitalWrite(motor1ReversePin, LOW);
+  delay(10);
+  digitalWrite(motor2ReversePin, LOW);
+  delay(10);
+  
+}
 int getUSdistance(){
   digitalWrite(USsensorTrigPin, LOW);
   delay(5);
@@ -192,7 +214,7 @@ int getUSdistance(){
   return pulseIn(USsensorEchoPin, HIGH)/29/2;
 }
 
-void turnLeftNinety(){
+void turnRightNinety(){
   
    //We need 1.77 revoltutions of the motor to turn 90 degrees
     digitalWrite(motor1ForwardPin, HIGH);
@@ -205,26 +227,33 @@ void turnLeftNinety(){
     delay(10);
     digitalWrite(motor2ForwardPin, LOW);
     
-    delay(6000);
+    delay(500);
 
+    stopWheels();
   
 }
-void turnRightNinety(){
+void turnLeftNinety(){
   
    //We need 1.77 revoltutions of the motor to turn 90 degrees
     digitalWrite(motor1ForwardPin, LOW);
     delay(10);
     digitalWrite(motor2ReversePin, LOW);
-    //Delay until it move 90 degrees *************************Fix the delay********************************
     delay(10);
-
     digitalWrite(motor1ReversePin, HIGH);
     delay(10);
     digitalWrite(motor2ForwardPin, HIGH);
     
-    delay(6000);
+    delay(500);
+    stopWheels();
+    
+}
 
-  
+float getIRdistance(){
+  float volts;
+  float dist;
+  volts = analogRead(5)*0.0048828125; //5V/1024
+  dist = 13*pow(volts, -1.1);
+  return dist;
 }
 //Conversion to inches function. Taken from the "ping" example
 
